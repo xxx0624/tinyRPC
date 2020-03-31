@@ -2,8 +2,6 @@ package tinyRPC
 
 import (
 	"errors"
-	"fmt"
-	"log"
 	"net"
 	"reflect"
 )
@@ -56,7 +54,7 @@ func (c *Client) TransformMethod(methodName string, methodPtr interface{}) {
 		}
 		values := make([]reflect.Value, methodOutputNum)
 		for i := 0; i < methodOutputNum; i++ {
-			if i < methodOutputNum-1 {
+			if i == methodOutputNum-1 {
 				values[i] = reflect.Zero(container.Type().Out(i))
 			} else {
 				if resp.Args[i] == nil {
@@ -70,19 +68,4 @@ func (c *Client) TransformMethod(methodName string, methodPtr interface{}) {
 	}
 
 	container.Set(reflect.MakeFunc(container.Type(), fn))
-}
-
-func main() {
-	addr := "127.0.0.1:8080"
-	conn, err := net.Dial("tcp", addr)
-	if err != nil {
-		log.Printf("connect %s error: %v\n", addr, err)
-		return
-	}
-
-	cli := NewClient(conn)
-	var addFn func(int, int) int
-	cli.TransformMethod("add", &addFn)
-	answer := addFn(2, 20)
-	fmt.Println(answer)
 }

@@ -2,6 +2,7 @@ package tinyRPC
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"reflect"
@@ -36,34 +37,43 @@ func (s *Server) Run() {
 			for {
 				req, err := transport.Receive()
 				if err != nil {
-					log.Printf("receive data, error: %v\n", err)
-					return
-				}
-				fn, ok := s.fns[req.Name]
-				if !ok {
-					// fn doesn'e exist
-					e := fmt.Sprintf("func %s not exist", req.Name)
-					if err = transport.Send(Data{Name: req.Name, Err: e}); err != nil {
-						log.Printf("transport send error: %v\n", err)
+					if err != io.EOF {
+						log.Printf("receive read err: %v\n", err)
 					}
 					return
 				}
 
+				fn, ok := s.fns[req.Name]
+				if !ok {
+					// fn doesn'e exist
+					e := fmt.Sprintf("func %s not exist", req.Name)
+					log.Printf(e)
+					if err = transport.Send(Data{Name: req.Name, Err: e}); err != nil {
+						log.Printf("transport send error: %v\n", err)
+					}
+					continue
+				}
+
+				log.Printf("func %s is called\n", req.Name)
 				args := make([]reflect.Value, len(req.Args))
 				for i := range req.Args {
 					args[i] = reflect.ValueOf(req.Args[i])
 				}
 
 				output := fn.Call(args)
+				// values will ignore error
 				values := make([]interface{}, len(output)-1)
-				for i := 0; i < len(output)-1; i++ {
-					values[i] = output[i].Interface()
-				}
 				var e string
-				if _, ok := output[len(output)-1].Interface().(error); !ok {
-					e = ""
-				} else {
-					e = output[len(output)-1].Interface().(error).Error()
+				for i := 0; i < len(output); i++ {
+					if i != len(output)-1 {
+						values[i] = output[i].Interface()
+					} else {
+						if _, ok := output[len(output)-1].Interface().(error); !ok {
+							e = ""
+						} else {
+							e = output[len(output)-1].Interface().(error).Error()
+						}
+					}
 				}
 				err = transport.Send(Data{Name: req.Name, Args: values, Err: e})
 				if err != nil {
