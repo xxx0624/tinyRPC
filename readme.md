@@ -36,10 +36,12 @@ docker run -p 127.0.0.1:8080:8080 --name rpc -d tinyrpc:test
 ```
 
 ## TODO
-Methods in Golang usually will include the error information in the return values. So in the implementation of the tinyRPC, all methods registered in the server side are required to return the error as the last one in the return list.
+1. Methods in Golang usually will include the error information in the return values. So in the implementation of the tinyRPC, all methods registered in the server side are required to return the error as the last one in the return list.
 
-Like:
+    Like:
 `func methodExample(...) (..., error)`
+
+2. Test Docker server
 
 ## Reference 
 [rpc blog](https://blog.jiahonzheng.cn/2018/11/25/Golang%20%E7%AE%80%E6%98%93%20RPC%20%E6%A1%86%E6%9E%B6/)
