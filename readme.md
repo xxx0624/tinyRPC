@@ -28,6 +28,13 @@ cd example
 go run client.go
 ```
 
+## Docker
+```
+cd /path/to/this/tinyRPC
+docker build -t tinyrpc:test .
+docker run -p 127.0.0.1:8080:8080 --name rpc -d tinyrpc:test
+```
+
 ## TODO
 Methods in Golang usually will include the error information in the return values. So in the implementation of the tinyRPC, all methods registered in the server side are required to return the error as the last one in the return list.
 
